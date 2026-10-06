@@ -17,7 +17,8 @@ namespace Garden_group
             string databaseName = Environment.GetEnvironmentVariable("MONGODB_DATABASE")
                 ?? throw new InvalidOperationException("MONGODB_DATABASE is missing from .env");
 
-            // One MongoClient for the whole app: it's thread-safe and manages its own connection pool.
+            // MongoDB setup (Luca Mulders)
+            // One MongoClient for the whole app, it's thread-safe and manages its own connection pool
             builder.Services.AddSingleton<IMongoClient>(_ => new MongoClient(connectionString));
             builder.Services.AddSingleton(sp =>
                 sp.GetRequiredService<IMongoClient>().GetDatabase(databaseName));

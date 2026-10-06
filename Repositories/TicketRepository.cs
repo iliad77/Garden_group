@@ -1,3 +1,4 @@
+// Author: Luca Mulders
 using Garden_group.Models;
 using MongoDB.Bson;
 using MongoDB.Driver;
@@ -17,7 +18,7 @@ namespace Garden_group.Repositories
                 Builders<Ticket>.IndexKeys.Ascending(t => t.ReportedBy)));
         }
 
-        // Returns every ticket, newest first
+        /// <inheritdoc/>
         public async Task<List<Ticket>> GetAllAsync()
         {
             return await _tickets.Find(FilterDefinition<Ticket>.Empty)
@@ -25,7 +26,7 @@ namespace Garden_group.Repositories
                 .ToListAsync();
         }
 
-        // Returns the tickets reported by userId, newest first (empty list if the id is invalid)
+        /// <inheritdoc/>
         public async Task<List<Ticket>> GetByUserAsync(string userId)
         {
             if (!ObjectId.TryParse(userId, out _))
@@ -36,7 +37,7 @@ namespace Garden_group.Repositories
                 .ToListAsync();
         }
 
-        // Returns the ticket with this id, or null if it doesn't exist
+        /// <inheritdoc/>
         public async Task<Ticket?> GetByIdAsync(string id)
         {
             // An invalid id string would make the driver throw, so treat it as not found
@@ -46,7 +47,7 @@ namespace Garden_group.Repositories
             return await _tickets.Find(t => t.Id == id).FirstOrDefaultAsync();
         }
 
-        // Inserts the ticket as Open and returns it with its generated id
+        /// <inheritdoc/>
         public async Task<Ticket> CreateAsync(Ticket ticket)
         {
             ticket.Id = null;
@@ -57,7 +58,7 @@ namespace Garden_group.Repositories
             return ticket;
         }
 
-        // Replaces all fields of an existing ticket, returns false if it wasn't found
+        /// <inheritdoc/>
         public async Task<bool> UpdateAsync(Ticket ticket)
         {
             if (!ObjectId.TryParse(ticket.Id, out _))
@@ -67,7 +68,7 @@ namespace Garden_group.Repositories
             return result.MatchedCount > 0;
         }
 
-        // Sets a new status and adds the handling entry to handledBy, returns false if the ticket wasn't found
+        /// <inheritdoc/>
         public async Task<bool> ChangeStatusAsync(string id, TicketStatus status, TicketHandling handling)
         {
             if (!ObjectId.TryParse(id, out _))
@@ -82,7 +83,7 @@ namespace Garden_group.Repositories
             return result.MatchedCount > 0;
         }
 
-        // Permanently deletes the ticket, returns false if it wasn't found
+        /// <inheritdoc/>
         public async Task<bool> DeleteAsync(string id)
         {
             if (!ObjectId.TryParse(id, out _))
@@ -92,7 +93,7 @@ namespace Garden_group.Repositories
             return result.DeletedCount > 0;
         }
 
-        // Returns the number of tickets per status, for one user or for everyone if userId is null
+        /// <inheritdoc/>
         public async Task<Dictionary<TicketStatus, int>> GetStatusCountsAsync(string? userId = null)
         {
             // Every status starts at 0 so the dashboard also shows statuses with no tickets

@@ -1,3 +1,4 @@
+// Author: Luca Mulders
 namespace Garden_group.Models
 {
     // Stored in MongoDB as strings, so names must match the data exactly
