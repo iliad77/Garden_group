@@ -1,10 +1,25 @@
+using DotNetEnv;
+using MongoDB.Driver;
+
 namespace Garden_group
 {
     public class Program
     {
         public static void Main(string[] args)
         {
+            Env.Load();
+
             var builder = WebApplication.CreateBuilder(args);
+
+            string connectionString = Environment.GetEnvironmentVariable("MONGODB_URI")
+                ?? throw new InvalidOperationException("MONGODB_URI is missing from .env");
+            string databaseName = Environment.GetEnvironmentVariable("MONGODB_DATABASE")
+                ?? throw new InvalidOperationException("MONGODB_DATABASE is missing from .env");
+
+            // One MongoClient for the whole app: it's thread-safe and manages its own connection pool.
+            builder.Services.AddSingleton<IMongoClient>(_ => new MongoClient(connectionString));
+            builder.Services.AddSingleton(sp =>
+                sp.GetRequiredService<IMongoClient>().GetDatabase(databaseName));
 
             // Add services to the container.
             builder.Services.AddControllersWithViews();
