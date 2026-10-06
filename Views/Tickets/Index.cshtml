@@ -1,0 +1,40 @@
+@model List<Garden_group.Models.Ticket>
+@{
+    ViewData["Title"] = "Tickets";
+    var counts = (Dictionary<Garden_group.Models.TicketStatus, int>)ViewBag.StatusCounts;
+}
+
+<h1>Tickets (@Model.Count)</h1>
+
+<p>
+    @foreach (var status in counts)
+    {
+        <span class="me-3"><strong>@status.Key:</strong> @status.Value</span>
+    }
+</p>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Subject</th>
+            <th>Type</th>
+            <th>Priority</th>
+            <th>Status</th>
+            <th>Reported</th>
+            <th>Handled</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var ticket in Model)
+        {
+            <tr>
+                <td>@ticket.Subject</td>
+                <td>@ticket.IncidentType</td>
+                <td>@ticket.Priority</td>
+                <td>@ticket.Status</td>
+                <td>@ticket.TimeReported.ToLocalTime().ToString("dd-MM-yyyy HH:mm")</td>
+                <td>@ticket.HandledBy.Count</td>
+            </tr>
+        }
+    </tbody>
+</table>

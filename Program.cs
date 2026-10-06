@@ -1,4 +1,5 @@
 using DotNetEnv;
+using Garden_group.Repositories;
 using MongoDB.Driver;
 
 namespace Garden_group
@@ -20,6 +21,9 @@ namespace Garden_group
             builder.Services.AddSingleton<IMongoClient>(_ => new MongoClient(connectionString));
             builder.Services.AddSingleton(sp =>
                 sp.GetRequiredService<IMongoClient>().GetDatabase(databaseName));
+
+            // Stateless and wraps a thread-safe collection, so one instance can be shared
+            builder.Services.AddSingleton<ITicketRepository, TicketRepository>();
 
             // Add services to the container.
             builder.Services.AddControllersWithViews();
