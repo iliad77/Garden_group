@@ -25,6 +25,7 @@ namespace Garden_group
 
             // Stateless and wraps a thread-safe collection, so one instance can be shared
             builder.Services.AddSingleton<ITicketRepository, TicketRepository>();
+            builder.Services.AddScoped<IUserRepository, UserRepo>();
 
             // Add services to the container.
             builder.Services.AddControllersWithViews();
