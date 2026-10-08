@@ -29,7 +29,7 @@ namespace Garden_group.Repositories
         /// <inheritdoc/>
         public async Task<List<Ticket>> GetByUserAsync(string userId)
         {
-            if (!ObjectId.TryParse(userId, out _))
+            if (!IsValidId(userId))
                 return new List<Ticket>();
 
             return await _tickets.Find(t => t.ReportedBy == userId)
@@ -40,8 +40,7 @@ namespace Garden_group.Repositories
         /// <inheritdoc/>
         public async Task<Ticket?> GetByIdAsync(string id)
         {
-            // An invalid id string would make the driver throw, so treat it as not found
-            if (!ObjectId.TryParse(id, out _))
+            if (!IsValidId(id))
                 return null;
 
             return await _tickets.Find(t => t.Id == id).FirstOrDefaultAsync();
@@ -61,7 +60,7 @@ namespace Garden_group.Repositories
         /// <inheritdoc/>
         public async Task<bool> UpdateAsync(Ticket ticket)
         {
-            if (!ObjectId.TryParse(ticket.Id, out _))
+            if (!IsValidId(ticket.Id))
                 return false;
 
             var result = await _tickets.ReplaceOneAsync(t => t.Id == ticket.Id, ticket);
@@ -71,7 +70,7 @@ namespace Garden_group.Repositories
         /// <inheritdoc/>
         public async Task<bool> ChangeStatusAsync(string id, TicketStatus status, TicketHandling handling)
         {
-            if (!ObjectId.TryParse(id, out _))
+            if (!IsValidId(id))
                 return false;
 
             // $set and $push combined so the status and its history entry are saved in one round trip
@@ -86,7 +85,7 @@ namespace Garden_group.Repositories
         /// <inheritdoc/>
         public async Task<bool> DeleteAsync(string id)
         {
-            if (!ObjectId.TryParse(id, out _))
+            if (!IsValidId(id))
                 return false;
 
             var result = await _tickets.DeleteOneAsync(t => t.Id == id);
@@ -97,13 +96,22 @@ namespace Garden_group.Repositories
         public async Task<Dictionary<TicketStatus, int>> GetStatusCountsAsync(string? userId = null)
         {
             // Every status starts at 0 so the dashboard also shows statuses with no tickets
-            var counts = Enum.GetValues<TicketStatus>().ToDictionary(s => s, s => 0);
-            if (userId != null && !ObjectId.TryParse(userId, out _))
+            var counts = new Dictionary<TicketStatus, int>
+            {
+                { TicketStatus.Open, 0 },
+                { TicketStatus.Resolved, 0 },
+                { TicketStatus.Closed, 0 }
+            };
+
+            if (userId != null && !IsValidId(userId))
                 return counts;
 
-            var filter = userId == null
-                ? FilterDefinition<Ticket>.Empty
-                : Builders<Ticket>.Filter.Eq(t => t.ReportedBy, userId);
+            // No userId means all tickets, otherwise only the tickets this user reported
+            FilterDefinition<Ticket> filter;
+            if (userId == null)
+                filter = FilterDefinition<Ticket>.Empty;
+            else
+                filter = Builders<Ticket>.Filter.Eq(t => t.ReportedBy, userId);
 
             // Aggregation pipeline: $match on the user (optional), then $group by status and count
             var groups = await _tickets.Aggregate()
@@ -115,6 +123,13 @@ namespace Garden_group.Repositories
                 counts[group.Status] = group.Count;
 
             return counts;
+        }
+
+        // Checks that the id is a valid ObjectId (24 hex characters)
+        // An invalid id would make the driver throw, so it's treated as not found instead
+        private static bool IsValidId(string? id)
+        {
+            return ObjectId.TryParse(id, out _);
         }
     }
 }

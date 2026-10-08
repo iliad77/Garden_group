@@ -19,9 +19,9 @@ namespace Garden_group
 
             // MongoDB setup (Luca Mulders)
             // One MongoClient for the whole app, it's thread-safe and manages its own connection pool
-            builder.Services.AddSingleton<IMongoClient>(_ => new MongoClient(connectionString));
-            builder.Services.AddSingleton(sp =>
-                sp.GetRequiredService<IMongoClient>().GetDatabase(databaseName));
+            var mongoClient = new MongoClient(connectionString);
+            builder.Services.AddSingleton<IMongoClient>(mongoClient);
+            builder.Services.AddSingleton(mongoClient.GetDatabase(databaseName));
 
             // Stateless and wraps a thread-safe collection, so one instance can be shared
             builder.Services.AddSingleton<ITicketRepository, TicketRepository>();
