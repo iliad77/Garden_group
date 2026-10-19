@@ -1,0 +1,79 @@
+@model List<Garden_group.Models.User>
+@{
+    Layout = null;
+    ViewData["Title"] = "Manage users – NoDesk";
+}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="~/css/styles.css" asp-append-version="true" />
+    <style>
+        a.nav-item, a.btn { display: inline-block; text-decoration: none; }
+        a.nav-item { display: block; }
+    </style>
+</head>
+<body>
+<div class="app">
+    <aside class="sidebar">
+        <div class="brand">NoDesk</div>
+        <nav>
+            <a asp-controller="Home" asp-action="Index" class="nav-item">Dashboard</a>
+            <a asp-controller="Tickets" asp-action="Index" class="nav-item">Tickets</a>
+            <a asp-controller="User" asp-action="Index" class="nav-item active">Manage users</a>
+        </nav>
+    </aside>
+
+    <main class="main">
+        <header class="topbar">
+            <div>
+                <div class="eyebrow">SERVICE DESK</div>
+                <h2>Manage users</h2>
+            </div>
+        </header>
+
+        <section class="page">
+            <div class="panel">
+                <div class="panel-head">
+                    <h3>User management</h3>
+                    <span class="muted">@Model.Count users</span>
+                </div>
+                <div class="table-scroll">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>First name</th>
+                                <th>Last name</th>
+                                <th>Email</th>
+                                <th>Phone</th>
+                                <th>Type</th>
+                                <th>Location</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var user in Model)
+                            {
+                                <tr>
+                                    <td>@user.Name.First</td>
+                                    <td>@user.Name.Last</td>
+                                    <td>@user.Email</td>
+                                    <td>@user.Phone</td>
+                                    <td>@user.UserType</td>
+                                    <td>@user.Address</td>
+                                </tr>
+                            }
+                            @if (!Model.Any())
+                            {
+                                <tr><td colspan="6" class="muted">No users found.</td></tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+</div>
+</body>
+</html>

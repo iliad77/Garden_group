@@ -19,14 +19,14 @@ namespace Garden_group.Models
         [BsonElement("phone")]
         public string Phone { get; set; } = string.Empty;
 
-        [BsonElement("address")]
+        [BsonElement("location")]
         public string Address { get; set; } = string.Empty;
 
         [BsonRepresentation(BsonType.String)]
         [BsonElement("userType")]
         public UserType UserType { get; set; }
 
-        [BsonElement("passwordHash")] 
+        [BsonElement("password")] 
         public string Password { get; set; }
 
     }

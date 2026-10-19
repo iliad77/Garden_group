@@ -5,5 +5,6 @@
         Admin,
         Employee,
         ITsupport,
+        ServiceDesk
     }
 }
