@@ -1,5 +1,6 @@
 using DotNetEnv;
 using Garden_group.Repositories;
+using Garden_group.Services;
 using MongoDB.Driver;
 
 namespace Garden_group
@@ -22,6 +23,10 @@ namespace Garden_group
             builder.Services.AddSingleton<IMongoClient>(_ => new MongoClient(connectionString));
             builder.Services.AddSingleton(sp =>
                 sp.GetRequiredService<IMongoClient>().GetDatabase(databaseName));
+           
+            //Ticket seach and filter (Chris)
+            builder.Services.AddScoped<TicketSearchService>();
+            builder.Services.AddScoped<TicketFilterService>();
 
             // Stateless and wraps a thread-safe collection, so one instance can be shared
             builder.Services.AddSingleton<ITicketRepository, TicketRepository>();
@@ -36,7 +41,7 @@ namespace Garden_group
             if (!app.Environment.IsDevelopment())
             {
                 app.UseExceptionHandler("/Home/Error");
-                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+                // The default HSTS value is 30 days.  https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
             }
 
