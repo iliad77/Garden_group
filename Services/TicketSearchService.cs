@@ -46,7 +46,7 @@ namespace Garden_group.Services
 
             if (useAndOperator)
             {
-                // AND search: Every word must appear in either the Subject or Description[cite: 2]
+                // AND search: Every word must appear in either the Subject or Description
                 matches = allTickets.Where(ticket =>
                     terms.All(term =>
                         (!string.IsNullOrEmpty(ticket.Subject) && ticket.Subject.ToLowerInvariant().Contains(term)) ||
@@ -56,7 +56,7 @@ namespace Garden_group.Services
             }
             else
             {
-                // OR search: At least one word must appear in either the Subject or Description[cite: 2]
+                // OR search: At least one word must appear in either the Subject or Description
                 matches = allTickets.Where(ticket =>
                     terms.Any(term =>
                         (!string.IsNullOrEmpty(ticket.Subject) && ticket.Subject.ToLowerInvariant().Contains(term)) ||
@@ -65,7 +65,7 @@ namespace Garden_group.Services
                 );
             }
 
-            // Always order by most recent on top as required by rubric[cite: 2]
+            // Always order by most recent on top as required by rubric
             return matches.OrderByDescending(t => t.TimeReported).ToList();
         }
     }

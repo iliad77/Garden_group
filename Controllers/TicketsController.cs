@@ -9,6 +9,8 @@ namespace Garden_group.Controllers
         private readonly ITicketRepository _ticketRepository;
 
         // Injected TicketSearchService and TicketFilterService (Chris)
+        //this allows for separation of concerns, keeping the controller focused on handling HTTP requests and delegating business logic to services
+        // this also prevent multiple call to datbase from construsctor and allows for better testability and maintainability of the codebase
         private readonly TicketSearchService _searchService;
         private readonly TicketFilterService _filterService;
 
@@ -33,13 +35,13 @@ namespace Garden_group.Controllers
         [HttpGet]
         public async Task<IActionResult> Search(string query, string searchMode = "AND")
         {
-            // Retain status counts for dashboard metrics
+            // Retain status counts for dashboard m
             ViewBag.StatusCounts = await _ticketRepository.GetStatusCountsAsync();
 
-            // Evaluate boolean flag: true for AND search, false for OR search[cite: 2]
+            // Evaluate boolean flag: true for AND search, false for OR search
             bool useAnd = (searchMode?.ToUpper() != "OR");
 
-            // Execute search on subject and description, returning results sorted most recent first[cite: 2]
+            // Execute search on subject and description, returning results sorted most recent first
             var searchResults = await _searchService.SearchTicketsAsync(query, useAnd);
 
             // Preserve search state for the view inputs
@@ -49,14 +51,14 @@ namespace Garden_group.Controllers
             return View("Index", searchResults);
         }
 
-        // Functionality 2 - Filter Loaded List Action (Chris)[cite: 2]
+        // Functionality 2 - Filter Loaded List Action (Chris)
         [HttpGet]
         public async Task<IActionResult> FilterLoaded(string keyword)
         {
-            // Retain status counts for dashboard metrics
+            // Retain status counts for dashboard 
             ViewBag.StatusCounts = await _ticketRepository.GetStatusCountsAsync();
 
-            // Load all tickets first, then filter the preloaded list in memory[cite: 2]
+            // Load all tickets first, then filter the preloaded list in memory
             var preloadedTickets = await _ticketRepository.GetAllAsync();
             var filteredTickets = _filterService.FilterLoadedTickets(preloadedTickets, keyword);
 

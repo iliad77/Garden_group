@@ -1,5 +1,5 @@
 ﻿
-// NEW CODE BY CHRIS: Functionality 2 - Dedicated Filter Class      
+// CHRIS: Functionality 2 - Dedicated Filter Class      
 using System;
 using System.Collections.Generic;
 using System.Linq;
