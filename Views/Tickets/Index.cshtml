@@ -2,40 +2,122 @@
 @model List<Garden_group.Models.Ticket>
 @{
     ViewData["Title"] = "Tickets";
-    var counts = (Dictionary<Garden_group.Models.TicketStatus, int>)ViewBag.StatusCounts;
+    var counts = ViewBag.StatusCounts as Dictionary<Garden_group.Models.TicketStatus, int>;
+
+    
+    // CHRIS: State management for Search inputs     
+  
+    string currentQuery = ViewBag.SearchQuery as string ?? "";
+    string currentMode = ViewBag.SearchMode as string ?? "AND";
 }
 
-<h1>Tickets (@Model.Count)</h1>
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1>Tickets (@(Model?.Count ?? 0))</h1>
+    </div>
 
-<p>
-    @foreach (var status in counts)
+    <!-- Status summary badges -->
+    @if (counts != null && counts.Any())
     {
-        <span class="me-3"><strong>@status.Key:</strong> @status.Value</span>
+        <div class="mb-3">
+            @foreach (var status in counts)
+            {
+                <span class="badge bg-secondary me-2 p-2">
+                    <strong>@status.Key:</strong> @status.Value
+                </span>
+            }
+        </div>
     }
-</p>
 
-<table class="table table-striped">
-    <thead>
-        <tr>
-            <th>Subject</th>
-            <th>Type</th>
-            <th>Priority</th>
-            <th>Status</th>
-            <th>Reported</th>
-            <th>Handled</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var ticket in Model)
-        {
+    
+    <!-- CHRIS: Functionality 1 - Search Form (AND/OR ) -->
+    <div class="card mb-3 p-3 bg-light shadow-sm">
+        <form asp-controller="Tickets" asp-action="Search" method="get" class="row g-3 align-items-center">
+            <div class="col-md-6">
+                <input type="text" name="query" value="@currentQuery" class="form-control" placeholder="Search ticket subject or content..." />
+            </div>
+            <div class="col-md-4 d-flex align-items-center gap-3">
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="searchMode" id="modeAnd" value="AND" @(currentMode == "AND" ? "checked" : "")>
+                    <label class="form-check-label" for="modeAnd">AND</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="searchMode" id="modeOr" value="OR" @(currentMode == "OR" ? "checked" : "")>
+                    <label class="form-check-label" for="modeOr">OR</label>
+                </div>
+            </div>
+            <div class="col-md-2 text-end">
+                <button type="submit" class="btn btn-primary w-100">Search DB</button>
+            </div>
+        </form>
+    </div>
+
+    <!--CHRIS: Functionality 2 - Filter On Preloaded Table -->
+    <div class="row mb-3">
+        <div class="col-md-5 ms-auto">
+            <input type="text" id="liveFilterInput" class="form-control" placeholder="Filter loaded tickets by keyword..." onkeyup="filterPreloadedTickets()" />
+        </div>
+    </div>
+
+    <!-- Tickets Table -->
+    <table class="table table-striped table-hover table-bordered align-middle">
+        <thead class="table-dark">
             <tr>
-                <td>@ticket.Subject</td>
-                <td>@ticket.IncidentType</td>
-                <td>@ticket.Priority</td>
-                <td>@ticket.Status</td>
-                <td>@ticket.TimeReported.ToLocalTime().ToString("dd-MM-yyyy HH:mm")</td>
-                <td>@ticket.HandledBy.Count</td>
+                <th>Subject</th>
+                <th>Type</th>
+                <th>Priority</th>
+                <th>Status</th>
+                <th>Reported</th>
+                <th>Handled</th>
             </tr>
+        </thead>
+        
+        <!-- === NEW CODE BY CHRIS: id="ticketTableBody" attached for JS filtering === -->
+        <tbody id="ticketTableBody">
+            @if (Model != null && Model.Any())
+            {
+                @foreach (var ticket in Model)
+                {
+                    <tr>
+                        <td><strong>@ticket.Subject</strong></td>
+                        <td>@(ticket.IncidentType.ToString())</td>
+                        <td>
+                            <span class="badge bg-info text-dark">
+                                @ticket.Priority
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge bg-warning text-dark">
+                                @ticket.Status
+                            </span>
+                        </td>
+                        <td>@ticket.TimeReported.ToLocalTime().ToString("dd-MM-yyyy HH:mm")</td>
+                        <td>@(ticket.HandledBy != null ? ticket.HandledBy.Count : 0)</td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="6" class="text-center text-muted py-4">No tickets found.</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<!-- CHRIS: Functionality 2 - Instant Client-Side Filter Script -->
+
+@section Scripts {
+    <script>
+        function filterPreloadedTickets() {
+            const query = document.getElementById("liveFilterInput").value.toLowerCase();
+            const rows = document.querySelectorAll("#ticketTableBody tr");
+
+            rows.forEach(row => {
+                const text = row.innerText.toLowerCase();
+                row.style.display = text.includes(query) ? "" : "none";
+            });
         }
-    </tbody>
-</table>
+    </script>
+}
