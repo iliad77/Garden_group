@@ -8,6 +8,8 @@ namespace Garden_group
     {
         public static void Main(string[] args)
         {
+            Console.WriteLine($"Working directory: {Directory.GetCurrentDirectory()}");
+            Console.WriteLine($"Base directory: {AppContext.BaseDirectory}");
             Env.Load();
 
             var builder = WebApplication.CreateBuilder(args);
