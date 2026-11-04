@@ -1,4 +1,4 @@
-// Author: Luca Mulders
+// Author: Luca Mulders & Chris
 using Garden_group.Models;
 using MongoDB.Bson;
 using MongoDB.Driver;
@@ -12,10 +12,6 @@ namespace Garden_group.Repositories
         public TicketRepository(IMongoDatabase database)
         {
             _tickets = database.GetCollection<Ticket>("tickets");
-
-            // Speeds up "my tickets" and the per-user dashboard, does nothing if the index already exists
-            _tickets.Indexes.CreateOne(new CreateIndexModel<Ticket>(
-                Builders<Ticket>.IndexKeys.Ascending(t => t.ReportedBy)));
         }
 
         /// <inheritdoc/>
@@ -40,7 +36,6 @@ namespace Garden_group.Repositories
         /// <inheritdoc/>
         public async Task<Ticket?> GetByIdAsync(string id)
         {
-            // An invalid id string would make the driver throw, so treat it as not found
             if (!ObjectId.TryParse(id, out _))
                 return null;
 
@@ -74,7 +69,6 @@ namespace Garden_group.Repositories
             if (!ObjectId.TryParse(id, out _))
                 return false;
 
-            // $set and $push combined so the status and its history entry are saved in one round trip
             var update = Builders<Ticket>.Update
                 .Set(t => t.Status, status)
                 .Push(t => t.HandledBy, handling);
@@ -96,7 +90,6 @@ namespace Garden_group.Repositories
         /// <inheritdoc/>
         public async Task<Dictionary<TicketStatus, int>> GetStatusCountsAsync(string? userId = null)
         {
-            // Every status starts at 0 so the dashboard also shows statuses with no tickets
             var counts = Enum.GetValues<TicketStatus>().ToDictionary(s => s, s => 0);
             if (userId != null && !ObjectId.TryParse(userId, out _))
                 return counts;
@@ -105,7 +98,6 @@ namespace Garden_group.Repositories
                 ? FilterDefinition<Ticket>.Empty
                 : Builders<Ticket>.Filter.Eq(t => t.ReportedBy, userId);
 
-            // Aggregation pipeline: $match on the user (optional), then $group by status and count
             var groups = await _tickets.Aggregate()
                 .Match(filter)
                 .Group(t => t.Status, g => new { Status = g.Key, Count = g.Count() })
@@ -115,6 +107,38 @@ namespace Garden_group.Repositories
                 counts[group.Status] = group.Count;
 
             return counts;
+        }
+
+        /// <inheritdoc/>
+        // Author: Chris
+        public async Task<List<Ticket>> SearchTicketsAsync(string query, bool useAnd)
+        {
+            if (string.IsNullOrWhiteSpace(query))
+                return await GetAllAsync();
+
+            var words = query.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            var builder = Builders<Ticket>.Filter;
+            var wordFilters = new List<FilterDefinition<Ticket>>();
+
+            foreach (var word in words)
+            {
+                var regex = new BsonRegularExpression(word, "i");
+                // Each word can appear in Subject OR Description
+                wordFilters.Add(builder.Or(
+                    builder.Regex(t => t.Subject, regex),
+                    builder.Regex(t => t.Description, regex)
+                ));
+            }
+
+            // Combine words using AND or OR based on toggle
+            var combinedFilter = useAnd
+                ? builder.And(wordFilters)
+                : builder.Or(wordFilters);
+
+            return await _tickets
+                .Find(combinedFilter)
+                .SortByDescending(t => t.TimeReported)
+                .ToListAsync();
         }
     }
 }

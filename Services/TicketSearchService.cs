@@ -1,8 +1,4 @@
-﻿//  FUNCTIONALITY 1: TicketSearchService Class (Chris)                
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿// Author: Chris
 using Garden_group.Models;
 using Garden_group.Repositories;
 
@@ -17,56 +13,12 @@ namespace Garden_group.Services
             _ticketRepository = ticketRepository;
         }
 
-        
-        // Searches tickets by matching words in Subject and Description/Content.
-        //Supports AND and OR modes and sorts with the most recent tickets first.
-        
-        public async Task<List<Ticket>> SearchTicketsAsync(string searchQuery, bool useAndOperator = true)
+        /// <summary>
+        /// Executes full database search with AND/OR logic and ordering.
+        /// </summary>
+        public async Task<List<Ticket>> SearchTicketsAsync(string query, bool useAnd)
         {
-            // Retrieve all tickets using the verified working repository
-            var allTickets = await _ticketRepository.GetAllAsync();
-
-            if (string.IsNullOrWhiteSpace(searchQuery))
-            {
-                return allTickets.OrderByDescending(t => t.TimeReported).ToList();
-            }
-
-            // Split into individual search terms and normalize
-            var terms = searchQuery
-                .Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries)
-                .Select(t => t.Trim().ToLowerInvariant())
-                .ToList();
-
-            if (!terms.Any())
-            {
-                return allTickets.OrderByDescending(t => t.TimeReported).ToList();
-            }
-
-            IEnumerable<Ticket> matches;
-
-            if (useAndOperator)
-            {
-                // AND search: Every word must appear in either the Subject or Description
-                matches = allTickets.Where(ticket =>
-                    terms.All(term =>
-                        (!string.IsNullOrEmpty(ticket.Subject) && ticket.Subject.ToLowerInvariant().Contains(term)) ||
-                        (!string.IsNullOrEmpty(ticket.Description) && ticket.Description.ToLowerInvariant().Contains(term))
-                    )
-                );
-            }
-            else
-            {
-                // OR search: At least one word must appear in either the Subject or Description
-                matches = allTickets.Where(ticket =>
-                    terms.Any(term =>
-                        (!string.IsNullOrEmpty(ticket.Subject) && ticket.Subject.ToLowerInvariant().Contains(term)) ||
-                        (!string.IsNullOrEmpty(ticket.Description) && ticket.Description.ToLowerInvariant().Contains(term))
-                    )
-                );
-            }
-
-            // Always order by most recent on top as required by rubric
-            return matches.OrderByDescending(t => t.TimeReported).ToList();
+            return await _ticketRepository.SearchTicketsAsync(query, useAnd);
         }
     }
 }

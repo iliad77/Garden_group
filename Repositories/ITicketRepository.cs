@@ -1,4 +1,4 @@
-// Author: Luca Mulders
+// Author: Luca Mulders & Chris
 using Garden_group.Models;
 
 namespace Garden_group.Repositories
@@ -66,5 +66,13 @@ namespace Garden_group.Repositories
         /// <param name="userId">The ObjectId of a user to count only their tickets, or null to count all tickets.</param>
         /// <returns>The number of tickets for every status. Statuses without tickets are included as 0.</returns>
         Task<Dictionary<TicketStatus, int>> GetStatusCountsAsync(string? userId = null);
+
+        /// <summary>
+        /// Searches tickets across subject and description using AND/OR logic, sorted newest first.
+        /// </summary>
+        /// <param name="query">The text containing words to search for.</param>
+        /// <param name="useAnd">True to require all words (AND), false if any word matches (OR).</param>
+        /// <returns>Matching tickets sorted by most recent first.</returns>
+        Task<List<Ticket>> SearchTicketsAsync(string query, bool useAnd);
     }
 }

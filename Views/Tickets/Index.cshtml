@@ -1,14 +1,13 @@
-@* Author: Luca Mulders *@
+@* Author: Luca Mulders & Chris *@
 @model List<Garden_group.Models.Ticket>
 @{
     ViewData["Title"] = "Tickets";
     var counts = ViewBag.StatusCounts as Dictionary<Garden_group.Models.TicketStatus, int>;
 
-    
-    // CHRIS: State management for Search inputs     
-  
+    // CHRIS: State management for Search inputs
     string currentQuery = ViewBag.SearchQuery as string ?? "";
     string currentMode = ViewBag.SearchMode as string ?? "AND";
+    string? errorMessage = ViewBag.ErrorMessage as string;
 }
 
 <div class="container mt-4">
@@ -29,8 +28,17 @@
         </div>
     }
 
-    
-    <!-- CHRIS: Functionality 1 - Search Form (AND/OR ) -->
+    <!-- CHRIS: Server-side Search Error Alert -->
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-warning alert-dismissible fade show my-3" role="alert">
+            <strong>Notice:</strong> @errorMessage
+            <a asp-action="Index" class="alert-link ms-2">View all tickets</a>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <!-- CHRIS: Functionality 1 - Search Form (AND/OR) -->
     <div class="card mb-3 p-3 bg-light shadow-sm">
         <form asp-controller="Tickets" asp-action="Search" method="get" class="row g-3 align-items-center">
             <div class="col-md-6">
@@ -52,7 +60,7 @@
         </form>
     </div>
 
-    <!--CHRIS: Functionality 2 - Filter On Preloaded Table -->
+    <!-- CHRIS: Functionality 2 - Filter On Preloaded Table -->
     <div class="row mb-3">
         <div class="col-md-5 ms-auto">
             <input type="text" id="liveFilterInput" class="form-control" placeholder="Filter loaded tickets by keyword..." onkeyup="filterPreloadedTickets()" />
@@ -71,14 +79,12 @@
                 <th>Handled</th>
             </tr>
         </thead>
-        
-        <!-- === NEW CODE BY CHRIS: id="ticketTableBody" attached for JS filtering === -->
         <tbody id="ticketTableBody">
             @if (Model != null && Model.Any())
             {
                 @foreach (var ticket in Model)
                 {
-                    <tr>
+                    <tr class="ticket-row">
                         <td><strong>@ticket.Subject</strong></td>
                         <td>@(ticket.IncidentType.ToString())</td>
                         <td>
@@ -95,6 +101,13 @@
                         <td>@(ticket.HandledBy != null ? ticket.HandledBy.Count : 0)</td>
                     </tr>
                 }
+
+                <!-- CHRIS: Dynamic row shown when live client-side filter yields 0 matches -->
+                <tr id="noFilterMatchRow" style="display: none;">
+                    <td colspan="6" class="text-center text-muted py-4">
+                        <i class="bi bi-search me-1"></i> No tickets found matching your filter keyword.
+                    </td>
+                </tr>
             }
             else
             {
@@ -107,17 +120,27 @@
 </div>
 
 <!-- CHRIS: Functionality 2 - Instant Client-Side Filter Script -->
-
 @section Scripts {
     <script>
         function filterPreloadedTickets() {
-            const query = document.getElementById("liveFilterInput").value.toLowerCase();
-            const rows = document.querySelectorAll("#ticketTableBody tr");
+            const query = document.getElementById("liveFilterInput").value.trim().toLowerCase();
+            const rows = document.querySelectorAll("#ticketTableBody tr.ticket-row");
+            const noMatchRow = document.getElementById("noFilterMatchRow");
+            let visibleCount = 0;
 
             rows.forEach(row => {
                 const text = row.innerText.toLowerCase();
-                row.style.display = text.includes(query) ? "" : "none";
+                const matches = text.includes(query);
+                row.style.display = matches ? "" : "none";
+                if (matches) {
+                    visibleCount++;
+                }
             });
+
+            // Toggle the empty state row dynamically
+            if (noMatchRow) {
+                noMatchRow.style.display = (visibleCount === 0 && query !== "") ? "" : "none";
+            }
         }
     </script>
 }

@@ -1,35 +1,29 @@
-﻿
-// CHRIS: Functionality 2 - Dedicated Filter Class      
-using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿// Author: Chris
 using Garden_group.Models;
 
 namespace Garden_group.Services
 {
     public class TicketFilterService
     {
-        public IEnumerable<Ticket> FilterLoadedTickets(IEnumerable<Ticket> preloadedTickets, string keyword)
+        /// <summary>
+        /// Filters a preloaded list of tickets in memory using common keywords across subject, description, and status.
+        /// </summary>
+        public List<Ticket> FilterLoadedTickets(IEnumerable<Ticket> preloadedTickets, string? keyword)
         {
             if (preloadedTickets == null)
-            {
-                return Enumerable.Empty<Ticket>();
-            }
+                return new List<Ticket>();
 
             if (string.IsNullOrWhiteSpace(keyword))
-            {
-                return preloadedTickets;
-            }
+                return preloadedTickets.ToList();
 
-            var lowerKeyword = keyword.Trim().ToLowerInvariant();
+            var term = keyword.Trim();
 
-            return preloadedTickets.Where(ticket =>
-                (!string.IsNullOrEmpty(ticket.Subject) && ticket.Subject.ToLowerInvariant().Contains(lowerKeyword)) ||
-                (!string.IsNullOrEmpty(ticket.Description) && ticket.Description.ToLowerInvariant().Contains(lowerKeyword)) ||
-                ticket.IncidentType.ToString().ToLowerInvariant().Contains(lowerKeyword) ||
-                ticket.Status.ToString().ToLowerInvariant().Contains(lowerKeyword) ||
-                ticket.Priority.ToString().ToLowerInvariant().Contains(lowerKeyword)
-            );
+            return preloadedTickets
+                .Where(t =>
+                    (!string.IsNullOrEmpty(t.Subject) && t.Subject.Contains(term, StringComparison.OrdinalIgnoreCase)) ||
+                    (!string.IsNullOrEmpty(t.Description) && t.Description.Contains(term, StringComparison.OrdinalIgnoreCase)) ||
+                    t.Status.ToString().Contains(term, StringComparison.OrdinalIgnoreCase))
+                .ToList();
         }
     }
 }
