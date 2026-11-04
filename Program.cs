@@ -3,6 +3,9 @@ using Garden_group.Repositories;
 using Garden_group.Services;
 using MongoDB.Driver;
 
+using Microsoft.AspNetCore.Authentication.Cookies;
+
+
 namespace Garden_group
 {
     public class Program
@@ -37,6 +40,26 @@ namespace Garden_group
             // Add services to the container.
             builder.Services.AddControllersWithViews();
 
+            builder.Services
+                .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+                .AddCookie(options =>
+                {
+                    options.LoginPath = "/Account/Login";
+                    options.LogoutPath = "/Account/Logout";
+                    options.AccessDeniedPath = "/Account/AccessDenied";
+
+                    options.ExpireTimeSpan = TimeSpan.FromHours(2);
+
+                    options.Cookie.HttpOnly = true;
+                    options.Cookie.SecurePolicy =
+                        CookieSecurePolicy.Always;
+
+                    options.Cookie.SameSite = SameSiteMode.Lax;
+                });
+
+            builder.Services.AddAuthorization();
+
+
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
@@ -50,6 +73,7 @@ namespace Garden_group
             app.UseHttpsRedirection();
             app.UseRouting();
 
+            app.UseAuthentication();
             app.UseAuthorization();
 
             app.MapStaticAssets();

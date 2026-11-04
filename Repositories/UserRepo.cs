@@ -32,6 +32,16 @@ namespace Garden_group.Repositories
             return user;
         }
 
+        public User? GetByEmail(string email)
+        {
+            var filter = Builders<User>.Filter.Eq(
+                u => u.Email,
+                email.Trim().ToLowerInvariant()
+            );
+
+            return _usersCollection.Find(filter).FirstOrDefault();
+        }
+
         public void Create(User user)
         {
             _usersCollection.InsertOne(user);

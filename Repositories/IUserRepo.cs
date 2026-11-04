@@ -8,6 +8,10 @@ public interface IUserRepository
     User GetById(ObjectId id);
 
 
+    User? GetByEmail(string email);
+
+
+
     void Create(User user);
 
     bool Update(ObjectId id, User user);
