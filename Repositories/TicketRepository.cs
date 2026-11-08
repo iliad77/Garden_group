@@ -53,6 +53,7 @@ namespace Garden_group.Repositories
             ticket.Id = null;
             ticket.Status = TicketStatus.Open;
             ticket.HandledBy = new List<TicketHandling>();
+            ticket.Owner = null;
 
             await _tickets.InsertOneAsync(ticket);
             return ticket;
@@ -132,12 +133,11 @@ namespace Garden_group.Repositories
                             TicketStatus.Resolved.ToString(),
                             TicketStatus.Closed.ToString()
                         }) },
-                    { "handledBy.0", new BsonDocument("$exists", true) }
+                    { "owner", new BsonDocument("$ne", BsonNull.Value) }
                 }),
                 new BsonDocument("$group", new BsonDocument
                 {
-                    { "_id", new BsonDocument("$arrayElemAt",
-                        new BsonArray { "$handledBy.userId", -1 }) },
+                    { "_id", "$owner" },
                     { "count", new BsonDocument("$sum", 1) }
                 })
             };
@@ -148,5 +148,35 @@ namespace Garden_group.Repositories
         }
 
 
+        // adding an owner to ticket
+        public async Task<bool> AssignOwnerAsync(string ticketId, string userId)
+        {
+            if (!ObjectId.TryParse(ticketId, out _) || !ObjectId.TryParse(userId, out _))
+                return false;
+
+            var update = Builders<Ticket>.Update.Set(t => t.Owner, userId);
+            var result = await _tickets.UpdateOneAsync(t => t.Id == ticketId, update);
+            return result.MatchedCount > 0;
+        }
+
+
+        /// <inheritdoc/>
+        public async Task<Dictionary<ObjectId, int>> GetCreatedTicketCountPerUserAsync()
+        {
+            var pipeline = new[]
+            {
+                new BsonDocument("$group", new BsonDocument
+                {
+                    { "_id", "$reportedBy" },
+                    { "count", new BsonDocument("$sum", 1) }
+                })
+            };
+
+            var results = await _tickets.Aggregate<BsonDocument>(pipeline).ToListAsync();
+
+            return results
+                .Where(d => d["_id"].IsObjectId)   // skip tickets with a missing reportedBy
+                .ToDictionary(d => d["_id"].AsObjectId, d => d["count"].AsInt32);
+        }
     }
 }
