@@ -1,16 +1,21 @@
 ﻿using Garden_group.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
 
 namespace Garden_group.Controllers
 {
+    [Authorize]
     public class UserController : Controller
     {
+        private readonly PasswordHasher<User> _passwordHasher;
         private readonly IUserRepository _userRepository;
 
         public UserController(IUserRepository userRepository)
         {
             _userRepository = userRepository;
+            _passwordHasher = new PasswordHasher<User>();
         }
 
         public IActionResult Index()
@@ -37,12 +42,14 @@ namespace Garden_group.Controllers
             return View(user);
         }
 
+        [Authorize(Roles = "Admin,ServiceDesk,ITsupport")]
         [HttpGet]
         public IActionResult Create()
         {
             return View(new User());
         }
 
+        [Authorize(Roles = "Admin,ServiceDesk,ITsupport")]
         [HttpPost]
         public IActionResult Create(User user)
         {
@@ -52,11 +59,15 @@ namespace Garden_group.Controllers
             }
 
             user.Id = ObjectId.GenerateNewId();
+            user.Password = _passwordHasher.HashPassword(user,user.Password);
+            user.Email = user.Email.Trim().ToLowerInvariant();
+
             _userRepository.Create(user);
 
             return RedirectToAction("Index");
         }
 
+        [Authorize(Roles = "Admin,ServiceDesk,ITsupport")]
         [HttpGet]
         public IActionResult Edit(string id)
         {
@@ -75,6 +86,7 @@ namespace Garden_group.Controllers
             return View(user);
         }
 
+        [Authorize(Roles = "Admin,ServiceDesk,ITsupport")]
         [HttpPost]
         public IActionResult Edit(string id, User user)
         {
@@ -96,6 +108,10 @@ namespace Garden_group.Controllers
             {
                 user.Password = existingUser.Password;
             }
+            else
+            {
+                user.Password = _passwordHasher.HashPassword(user, user.Password);
+            }
 
             if (!IsValid(user, false))
             {
@@ -107,6 +123,8 @@ namespace Garden_group.Controllers
             return RedirectToAction("Index");
         }
 
+
+        [Authorize(Roles = "Admin,ServiceDesk,ITsupport")]
         [HttpPost]
         public IActionResult Delete(string id)
         {
