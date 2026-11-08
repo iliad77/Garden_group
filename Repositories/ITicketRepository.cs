@@ -69,5 +69,10 @@ namespace Garden_group.Repositories
         Task<Dictionary<TicketStatus, int>> GetStatusCountsAsync(string? userId = null);
 
         Task<Dictionary<ObjectId, int>> GetOpenTicketCountPerAssigneeAsync();
+
+        Task<bool> AssignOwnerAsync(string ticketId, string userId);
+
+        // getting the count of tickets opened/ reported by this user
+        Task<Dictionary<ObjectId, int>> GetCreatedTicketCountPerUserAsync();
     }
 }

@@ -1,4 +1,4 @@
-// Author: Luca Mulders
+// Author: Luca Mulders and Lera Shorin
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
@@ -45,5 +45,11 @@ namespace Garden_group.Models
         // Empty until a service desk employee picks the ticket up
         [BsonElement("handledBy")]
         public List<TicketHandling> HandledBy { get; set; } = new();
+
+
+        // adding owner to a ticket
+        [BsonElement("owner")]
+        [BsonRepresentation(BsonType.ObjectId)]
+        public string? Owner { get; set; }
     }
 }
