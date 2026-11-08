@@ -1,0 +1,115 @@
+﻿@model Garden_group.ViewModels.CreateTicketViewModel
+@{
+    Layout = null;
+    ViewData["Title"] = "New ticket – NoDesk";
+}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="~/css/styles.css" asp-append-version="true" />
+    <style>
+            a.nav-item, a.btn {
+                display: inline-block;
+                text-decoration: none;
+            }
+
+            a.nav-item {
+                display: block;
+            }
+
+            .form-group {
+                margin-bottom: 16px;
+            }
+
+                .form-group label {
+                    display: block;
+                    font-weight: 600;
+                    margin-bottom: 6px;
+                }
+
+                .form-group input, .form-group select, .form-group textarea {
+                    width: 100%;
+                    max-width: 560px;
+                    padding: 9px 10px;
+                    box-sizing: border-box;
+                    border: 1px solid var(--border);
+                    border-radius: 7px;
+                    font: inherit;
+                }
+
+            .field-error {
+                color: #dc2626;
+                font-size: 13px;
+            }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <aside class="sidebar">
+            <div class="brand">NoDesk</div>
+            <nav>
+                <a asp-controller="Dashboard" asp-action="Index" class="nav-item">Dashboard</a>
+                <a asp-controller="Tickets" asp-action="Index" class="nav-item active">Tickets</a>
+                <a asp-controller="User" asp-action="Index" class="nav-item">Manage users</a>
+            </nav>
+        </aside>
+
+        <main class="main">
+            <header class="topbar">
+                <div>
+                    <div class="eyebrow">SERVICE DESK</div>
+                    <h2>New ticket</h2>
+                </div>
+            </header>
+
+            <section class="page">
+                <div class="panel">
+                    <div class="panel-head"><h3>Create a ticket</h3></div>
+
+                    <form asp-action="Create" method="post">
+                        <div class="form-group">
+                            <label asp-for="Subject"></label>
+                            <input asp-for="Subject" />
+                            <span asp-validation-for="Subject" class="field-error"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label asp-for="IncidentType">Type of incident</label>
+                            <select asp-for="IncidentType">
+                                <option value="">-- choose --</option>
+                                <option>Hardware</option>
+                                <option>Software</option>
+                                <option>Service</option>
+                            </select>
+                            <span asp-validation-for="IncidentType" class="field-error"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label asp-for="Priority"></label>
+                            <select asp-for="Priority">
+                                <option value="">-- choose --</option>
+                                <option>Low</option>
+                                <option>Medium</option>
+                                <option>High</option>
+                            </select>
+                            <span asp-validation-for="Priority" class="field-error"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label asp-for="Description"></label>
+                            <textarea asp-for="Description" rows="5"></textarea>
+                            <span asp-validation-for="Description" class="field-error"></span>
+                        </div>
+
+                        <button type="submit" class="btn primary">CREATE TICKET</button>
+                        <a asp-action="Index" class="btn">CANCEL</a>
+                    </form>
+                </div>
+            </section>
+        </main>
+    </div>
+</body>
+</html>
