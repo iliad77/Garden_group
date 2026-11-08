@@ -170,7 +170,7 @@ namespace Garden_group.Controllers
                 principal
             );
 
-            return RedirectToAction("Index", "Home");
+            return RedirectToAction("Index", "Dashboard");
         }
 
     }
