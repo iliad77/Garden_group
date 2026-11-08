@@ -1,0 +1,91 @@
+@using Garden_group.Models
+@inject Garden_group.Repositories.ITicketRepository TicketRepository
+@{
+    Layout = null;
+    ViewData["Title"] = "NoDesk – Service Desk";
+
+    // Real numbers from the tickets collection (same repository the TicketsController uses)
+    var counts = await TicketRepository.GetStatusCountsAsync();
+    int unresolved = counts
+        .Where(c => c.Key != TicketStatus.Closed && c.Key != TicketStatus.Resolved)
+        .Sum(c => c.Value);
+
+    // TODO: calculate this once the Ticket model has a deadline field
+    int pastDeadline = 0;
+
+    int withinDeadline = unresolved - pastDeadline;
+    int pastPercent = unresolved == 0 ? 0 : (int)Math.Round(pastDeadline * 100.0 / unresolved);
+}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="~/css/styles.css" asp-append-version="true" />
+    <style>
+        /* The css file styles <button> elements; these make <a> links look the same */
+        a.nav-item, a.btn { display: inline-block; text-decoration: none; }
+        a.nav-item { display: block; }
+    </style>
+</head>
+<body>
+<div class="app">
+    <aside class="sidebar">
+        <div class="brand">NoDesk</div>
+        <nav>
+            <a asp-controller="Home" asp-action="Index" class="nav-item active">Dashboard</a>
+            <a asp-controller="Tickets" asp-action="Index" class="nav-item">Tickets</a>
+            <a asp-controller="User" asp-action="Index" class="nav-item">Manage users</a>
+        </nav>
+    </aside>
+
+    <main class="main">
+        <header class="topbar">
+            <div>
+                <div class="eyebrow">SERVICE DESK</div>
+                <h2>Dashboard</h2>
+            </div>
+            <a asp-controller="Tickets" asp-action="Create" class="btn primary">+ ADD NEW TICKET</a>
+        </header>
+
+        <section class="page">
+            <div class="cards">
+                <article class="stat-card">
+                    <span>Unresolved incidents</span>
+                    <strong>@unresolved</strong>
+                    <small>All tickets currently open</small>
+                </article>
+                <article class="stat-card">
+                    <span>Past deadline</span>
+                    <strong>@pastDeadline/@unresolved</strong>
+                    <small>These tickets need your immediate attention</small>
+                </article>
+                <article class="stat-card">
+                    <span>Current incidents</span>
+                    <strong>@withinDeadline</strong>
+                    <small>Tickets within deadline</small>
+                </article>
+            </div>
+
+            <div class="panel">
+                <div class="panel-head">
+                    <h3>Dashboard statistics</h3>
+                    <a asp-controller="Tickets" asp-action="Index" class="btn">SHOW LIST</a>
+                </div>
+                <div class="chart-wrap">
+                    <div class="donut"
+                         style="background: conic-gradient(var(--primary) 0 @(pastPercent)%, #d9e1eb @(pastPercent)% 100%);">
+                        <span>@unresolved<br><small>open</small></span>
+                    </div>
+                    <div>
+                        <h4>Unresolved incidents</h4>
+                        <p class="muted">@pastDeadline past deadline, @withinDeadline within deadline.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+</div>
+</body>
+</html>
