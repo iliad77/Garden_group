@@ -1,6 +1,10 @@
 using Garden_group.Repositories;
 using Microsoft.AspNetCore.Mvc;
 using Garden_group.Services;
+using System.Security.Claims;
+using Garden_group.Models;
+using Garden_group.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Garden_group.Controllers
 {
@@ -64,6 +68,46 @@ namespace Garden_group.Controllers
             ViewBag.FilterKeyword = keyword;
 
             return View("Index", filteredTickets);
+        }
+
+        [Authorize]
+        [HttpGet]
+        public IActionResult Create()
+        {
+            return View(new CreateTicketViewModel());
+        }
+
+
+
+        // Lera:
+        // adding create ticket
+
+        [Authorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create(CreateTicketViewModel model)
+        {
+            if (!ModelState.IsValid)
+                return View(model);
+
+            // The reporter is the logged-in user (stored in the cookie at login)
+            string userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+
+            var ticket = new Ticket
+            {
+                Subject = model.Subject.Trim(),
+                Description = model.Description.Trim(),
+                IncidentType = Enum.Parse<IncidentType>(model.IncidentType),   // see note below
+                Priority = Enum.Parse<TicketPriority>(model.Priority),           // see note below
+                ReportedBy = userId,
+                TimeReported = DateTime.UtcNow
+                // CreateAsync sets Id, Status = Open, HandledBy = empty and Owner = null
+            };
+
+            await _ticketRepository.CreateAsync(ticket);
+
+            TempData["SuccessMessage"] = "Ticket created.";
+            return RedirectToAction("Index");
         }
     }
 }
