@@ -1,7 +1,11 @@
 @model List<Garden_group.Models.User>
+@inject Garden_group.Repositories.ITicketRepository TicketRepository
 @{
     Layout = null;
     ViewData["Title"] = "Manage users – NoDesk";
+
+    // Open tickets per user (last handler of each unresolved ticket)
+    var openPerUser = await TicketRepository.GetOpenTicketCountPerAssigneeAsync();
 }
 <!doctype html>
 <html lang="en">
@@ -63,6 +67,7 @@
                                 <th>Phone</th>
                                 <th>Type</th>
                                 <th>Location</th>
+                                <th>Open tickets</th>
                                 <th></th>
                             </tr>
                         </thead>
@@ -76,6 +81,7 @@
                                     <td>@user.Phone</td>
                                     <td>@user.UserType</td>
                                     <td>@user.Address</td>
+                                        <td>@(openPerUser.TryGetValue(user.Id, out var openCount) ? openCount : 0)</td>
                                     <td>
                                         <div class="row-actions">
                                             <a asp-action="Edit" asp-route-id="@user.Id.ToString()" class="icon-btn" title="Edit user" aria-label="Edit user">
@@ -93,7 +99,7 @@
                             }
                             @if (!Model.Any())
                             {
-                                <tr><td colspan="7" class="muted">No users found.</td></tr>
+                                <tr><td colspan="8" class="muted">No users found.</td></tr>
                             }
                         </tbody>
                     </table>

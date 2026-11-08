@@ -1,4 +1,4 @@
-// Author: Luca Mulders
+// Author: Luca Mulders + Lera Shorin
 using Garden_group.Models;
 using MongoDB.Bson;
 using MongoDB.Driver;
@@ -116,5 +116,37 @@ namespace Garden_group.Repositories
 
             return counts;
         }
+
+
+        /// <inheritdoc/>
+        public async Task<Dictionary<ObjectId, int>> GetOpenTicketCountPerAssigneeAsync()
+        {
+            // "Assignee" = last entry in handledBy, because ChangeStatusAsync pushes every new
+            // handling to the end of the array.
+            var pipeline = new[]
+            {
+                new BsonDocument("$match", new BsonDocument
+                {
+                    { "status", new BsonDocument("$nin", new BsonArray
+                        {
+                            TicketStatus.Resolved.ToString(),
+                            TicketStatus.Closed.ToString()
+                        }) },
+                    { "handledBy.0", new BsonDocument("$exists", true) }
+                }),
+                new BsonDocument("$group", new BsonDocument
+                {
+                    { "_id", new BsonDocument("$arrayElemAt",
+                        new BsonArray { "$handledBy.userId", -1 }) },
+                    { "count", new BsonDocument("$sum", 1) }
+                })
+            };
+
+            var results = await _tickets.Aggregate<BsonDocument>(pipeline).ToListAsync();
+
+            return results.ToDictionary(d => d["_id"].AsObjectId, d => d["count"].AsInt32);
+        }
+
+
     }
 }

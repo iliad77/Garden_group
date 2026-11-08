@@ -1,5 +1,6 @@
 // Author: Luca Mulders
 using Garden_group.Models;
+using MongoDB.Bson;
 
 namespace Garden_group.Repositories
 {
@@ -66,5 +67,7 @@ namespace Garden_group.Repositories
         /// <param name="userId">The ObjectId of a user to count only their tickets, or null to count all tickets.</param>
         /// <returns>The number of tickets for every status. Statuses without tickets are included as 0.</returns>
         Task<Dictionary<TicketStatus, int>> GetStatusCountsAsync(string? userId = null);
+
+        Task<Dictionary<ObjectId, int>> GetOpenTicketCountPerAssigneeAsync();
     }
 }
